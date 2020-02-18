@@ -1,0 +1,291 @@
+swagger: "2.0"
+info:
+  description: "This is a simple `FLASK-API`.  For this sample, you can use the api key `special-key` to test the authorization     filters."
+  version: "1.0.0"
+  title: "User Managment System"
+
+host: "127.0.0.1:5000"
+basePath: "/api/v1"
+tags:
+- name: "Users"
+  description: "Access to Users"
+
+schemes:
+- "http"
+- "https"
+
+security:
+  - APIKeyHeader: []
+
+paths:
+  /user/add/:
+    post:
+      tags:
+      - "Users"  
+      summary: "Add a new User to the System"
+      description: ""
+      operationId: "addUser"
+      consumes:
+      - "application/json"
+      - "application/xml"
+
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User object that needs to be added to the System"
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        405:
+          description: "Invalid input"
+
+  /user/{userId}:
+    get:
+      tags:
+      - "Users"
+      summary: "Find user by ID"
+      description: "Returns a single user"
+      operationId: "getUserById"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "userId"
+        in: "path"
+        description: "ID of user to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/User"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "User not found"
+
+    put:
+      tags:
+      - "Users"
+      summary: "Update an existing User"
+      description: ""
+      operationId: "updateUser"
+      consumes:
+      - "application/json"
+      - "application/xml"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "userId"
+        in: "path"
+        description: "userId that need to be updated"
+        required: true
+        type: "integer"
+      - in: "body"
+        name: "body"
+        description: "Updated user object"
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/User"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "User not found"
+        405:
+          description: "Validation exception"
+
+    delete:
+      tags:
+      - "Users"
+      summary: "Deletes a User"
+      description: ""
+      operationId: "deleteUser"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "userId"
+        in: "path"
+        description: "User id to delete"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "User not found"
+        401:
+           description: "Authorization Failed"
+      security:
+      - api_key: []
+
+  /user/{userId}/UploadImage/:
+    post:
+      tags:
+      - "Users"
+      summary: "Upload profile pic"
+      description: ""
+      operationId: "uploadUserImage"
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "userId"
+        in: "path"
+        description: "Id of User"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "file"
+        in: "formData"
+        description: "File to Upload"
+        type: "file"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#definitions/ProfilePic"
+
+  /users/all/:
+    get:
+      tags:
+      - "Users"
+      summary: "Get List of all Users"
+      description: "Returns a list of users"
+      operationId: "getAllUsers"
+      produces:
+      - "application/xml"
+      - "application/json"
+
+      responses:
+        200:
+          $ref: "#responses/SuccessOperation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "User not found"
+        405:
+          description: "Validation exception"
+        401:
+           description: "Authorization Failed"
+      
+securityDefinitions:
+  X-API-Key: "abcdef12345" 
+  APIKeyHeader:
+    type: apiKey
+    in: Header
+    name: X-API-Key
+
+  APIKeyQueryParam:
+    type: apiKey
+    in: query
+    name: api_key  
+         
+definitions:
+  Skill:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      skill_name:
+        type: "string"
+    xml:
+      name: "Skill"
+
+  Hobbie:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      hobbie_name:
+        type: "string"
+    xml:
+      name: "Hobbie"
+
+  ProfilePic:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      image:
+        type: "string"
+    xml:
+      name: "ProfilePic"    
+         
+  User:
+    type: "object"
+    required:
+    - "username"
+    - "email"
+    - "skills"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      
+      username:
+        type: "string"
+        example: "Ajay Temkar"
+
+      email:
+        type: "string"
+        example: "example@eg.com"
+        
+      skills:
+        type: "array"
+        xml:
+          name: "Skill"
+          wrapped: true
+        items:
+            $ref: "#/definitions/Skill"
+
+      hobbies:
+        type: "array"
+        xml:
+          name: "Hobbie"
+          wrapped: true
+        items:
+            $ref: "#/definitions/Hobbie"
+
+    xml:
+      name: "User"
+ 
+responses:
+  UnauthorizedError:
+    description: API key is missing or invalid
+    headers:
+      WWW_Authenticate:
+        type: string
+
+  SuccessOperation:
+    description: successful operation
+    schema:
+        $ref: "#/definitions/User"
+
+
+
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
+
+
+
